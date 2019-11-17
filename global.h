@@ -84,4 +84,5 @@ extern String t2_old[2];
 extern String t2_new[2];
 
 extern float offsetTemp;
+extern String runningSince;
 #endif

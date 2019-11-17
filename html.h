@@ -15,11 +15,17 @@ const char changelog[] PROGMEM = R"=====(
 <li>0.12: weitere Optimierungen hinsichtlich Speicherverbrauch, NTP nicht bei jedem Loop (60s)
 <li>0.13: Wurde NTP nicht initialisiert, dann wird dies nun sp&auml;ter nachgeholt; einige yields hinzugef&uuml;gt
 <li>0.14: esp_task_wdt_init(999,false) in setup eingebaut, einige Timeouts geändert (nach 20s erstmals HTTP, Temp alle 1.5s, vorher 1.0s)
-
+<li>0.15: Ausgabe der Versionsnummer beim Update
+<li>0.16: Timeout von 999 auf 5000 erh&ouml;ht, statt yield nun vtaskdelay(10) in readPegel 
+<li>0.17: Allgemeines ESP-Debuglogging abgeschaltet, 'enable esp debug'-Option f&uuml;r Kommandozeile 
+<li>0.18: RunningSince eingebaut (inkl. print-Ausgabe)
+<li>0.19: HTTP-Fehler im Klartext, POST statt GET
+<li>0.20: Einige vTaskDelay(10); in OTA.cpp hinzu, direkte Verdrahtung von 192.168.178.24/data
+<li>0.21: HttpClient lokal zu readPegel, kein reuse, mit end(), Zugriff wieder mit GET, POST crashed staendig
 - TODO Ablage in GIT nachdem Wifi-Password in CIFFS liegt
 )=====";
 
-#define VERSION 0.14
+#define VERSION 0.21
 
 const char update[] PROGMEM = R"=====(
 <!DOCTYPE html><html lang="en" style="height:100%;"><head>

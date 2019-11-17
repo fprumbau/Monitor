@@ -77,6 +77,7 @@ void MyWifi::readTime() {
     yield();
     //nicht EWIG warten (10 Versuche)
     int ct = 0;
+    Serial.println(F("Ongoing readTime()..."));
     if(!timeUpdate) {
       while(!(timeUpdate = timeClient.update())) {
         yield();
@@ -91,6 +92,7 @@ void MyWifi::readTime() {
         readPegelData = true;
         return;
       }
+      runningSince = timeClient.getFormattedDate();
       readPegelData = true; // Erst JETZT mit HTTPClient Pegel lesen, sonst Crash!
       ntpInitialized = true; //im connect()-Fall nur beim Start ausfuehren
       timeClient.setTimeOffset(3600); //UTC Korrektur 

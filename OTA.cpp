@@ -73,6 +73,7 @@ void OTA::setup(const char *path, String username, String password) {
       response->addHeader("Access-Control-Allow-Origin", "*");
       request->send(response);
     },[&](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
+
       //Upload handler chunks in data     
       if(!index){ // if index == 0 then this is the first frame of data
         stopForOTA = true; //stoppt alle Aktionen im loop()
@@ -93,21 +94,23 @@ void OTA::setup(const char *path, String username, String password) {
         if(!Update.begin(maxSketchSpace)){//start with max available size
           Update.printError(Serial);
         }
-        //Update.runAsync(true); // tell the updaterClass to run in async mode (nicht da fuer ESP32)
       } else {
         ct++;
+        vTaskDelay(8); 
         if(ct%70==0) Serial.println(F(""));
         Serial.print(F("."));
         fileSize += len;
       }
       //Write chunked data to the free sketch space
       if(Update.write(data, len) != len){
+          vTaskDelay(10); 
           Update.printError(Serial);
       }
       
       if(final){ // if the final flag is set then this is the last frame of data
         if(Update.end(true)){ //true to set the size to the current progress
             t_stop = millis();
+            vTaskDelay(10); 
             Serial.print(F("\nTime UPLOAD: ")); Serial.print((t_stop - t_start) / 1000.0); Serial.println(" sec.");
             Serial.print(F("Speed UPLOAD: ")); Serial.print(calcSpeed(t_stop - t_start, fileSize)); Serial.println(" Kbit/s");
             Serial.printf("Upload Success, Rebooting: %u bytes\n", fileSize);

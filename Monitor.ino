@@ -25,8 +25,6 @@ float TempLast[2] = {0.0,0.0};
 
 bool debugTemperature = false;
 
-HTTPClient http;
-
 #include <esp_task_wdt.h>
 #include <esp_log.h>
    
@@ -46,8 +44,8 @@ uint16_t split(String s, char parser, int index);
 
 void setup() {
 
-  esp_log_level_set("*", ESP_LOG_DEBUG);
-  esp_task_wdt_init(999,false); //0.14
+  //esp_log_level_set("*", ESP_LOG_DEBUG);
+  esp_task_wdt_init(5000,false); //0.14
   
   Serial.begin(115200); 
 
@@ -100,10 +98,9 @@ void setup() {
 
   lastPegelUpdate = millis() + 10000; //Erstes Lesen der Daten nach 20s (s.u.)
 
-  screen.init();            
+  screen.init();       
 
-  // allow reuse (if server supports it)
-  http.setReuse(true);
+  screen.notify(String(VERSION));
 }
 
 /**********************************************************************/
@@ -182,19 +179,20 @@ void readPegel() {
 
    if(myWifi.connected()) {
 
-       // Send HTTP request
-       http.begin(F("http://www.prumbaum.com/data"));
-       yield();
+       HTTPClient http;
+       http.begin(F("http://192.168.178.24/data"));
+       vTaskDelay(10); 
     
-       int httpCode = http.GET();
+       int httpCode = http.GET(); //http.POST(""); crashed staendig
+       vTaskDelay(8);
        if (httpCode > 0) { //Check for the returning code
-            yield();
+        
             String payload = http.getString();
 
             DynamicJsonDocument doc(256);
             deserializeJson(doc, payload); //TODO from website???
     
-            yield();
+            vTaskDelay(10); 
             if(debug) {
               Serial.println(F("SerializeJsonPretty to Serial"));
               serializeJsonPretty(doc, Serial);
@@ -212,11 +210,12 @@ void readPegel() {
             lastReceivedPegelMillis = now; //Diese Messung ist 'später' als die Vergleichsmessung in loop()
                 
         } else {
-            Serial.println(httpCode);
-            Serial.println(F("Error on HTTP request"));
-        }          
-        yield();
+          
+          Serial.print(F("Error sending POST: "));
+          Serial.println(http.errorToString(httpCode));
+        }    
         http.end();
+        vTaskDelay(10);
    } else {
         Serial.println(F("readPegel nicht moeglich, weil myWifi nicht verbunden"));
    }
@@ -298,6 +297,8 @@ void commandLine() {
         screen.stop=true;
       } else if(cmd.startsWith(F("display start"))) {      
         screen.stop=false;
+      } else if(cmd.startsWith(F("enable esp debug"))) {      
+           esp_log_level_set("*", ESP_LOG_DEBUG);
       } else {
         Serial.println(F("Available commands:"));
         Serial.println(F(" - debug on|off"));
@@ -313,15 +314,18 @@ void commandLine() {
         Serial.println(F(" - debug display on|off :: Debugausgaben fuers Display on/off"));
         Serial.println(F(" - rect x,y,w,h, :: zeichne ein Rechteck"));
         Serial.println(F(" - set offsetTemp TEMP :: zur Angleichung der Temperatursensoren"));        
-        Serial.println(F(" - display start|stop :: Ausgaben stoppen"));
+        Serial.println(F(" - enable esp debug :: esp idf logging aktivieren"));       
         Serial.println(F(" - print :: Schreibe einige abgeleitete Werte auf den Bildschirm"));
         return;
       }
-      Serial.println(msg);;
+      Serial.println(msg);
     }  
 }
 
 void print() {
+  Serial.println(F("--------------------------------"));
+  Serial.print(F("Running since: "));
+  Serial.println(runningSince);  
   Serial.print(F("MyWifi.connected() :: "));
   Serial.println(myWifi.connected());
   Serial.print(F("sma.hasNewPacket() :: "));
@@ -340,6 +344,8 @@ void print() {
   Serial.println(sma.debugSma);    
   Serial.print(F("Read PegelData Flag :: "));
   Serial.println(readPegelData);     
+  Serial.print(F("Timeupdate :: "));  
+  Serial.println(myWifi.timeUpdate);  
   Serial.print(F("Zeit :: "));  
   Serial.println(timeClient.getFormattedDate());
   Serial.print(F("Timestamp :: "));  

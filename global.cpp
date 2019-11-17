@@ -60,3 +60,4 @@ String t2_old[]={ String((char*)0), String((char*)0) };
 String t2_new[]={ String((char*)0), String((char*)0) };
 
 float offsetTemp = 0.0;
+String runningSince = String((char*)0);
