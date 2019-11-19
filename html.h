@@ -22,10 +22,11 @@ const char changelog[] PROGMEM = R"=====(
 <li>0.19: HTTP-Fehler im Klartext, POST statt GET
 <li>0.20: Einige vTaskDelay(10); in OTA.cpp hinzu, direkte Verdrahtung von 192.168.178.24/data
 <li>0.21: HttpClient lokal zu readPegel, kein reuse, mit end(), Zugriff wieder mit GET, POST crashed staendig
-- TODO Ablage in GIT nachdem Wifi-Password in CIFFS liegt
+<li>0.22: Wieder yield statt vTaskDelay, Http wieder extern mit reuse=true defininiert, 3s statt 1s Reconnect Timeout bie MyWifi
+<li>0.23: Wieder 30s Wartezeit, bevor readPegel zum ersten Mal läuft und Test auf myWifi.timeUpdate, um Überschneidungen mit dem NTPClient zu vermeiden
 )=====";
 
-#define VERSION 0.21
+#define VERSION 0.23
 
 const char update[] PROGMEM = R"=====(
 <!DOCTYPE html><html lang="en" style="height:100%;"><head>

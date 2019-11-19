@@ -27,7 +27,7 @@ void MyWifi::connect() {
         WiFi.begin(_ssid, _password);
       }
       Serial.print(".");
-      delay(1000); 
+      delay(3000); 
   }
 
   IPAddress ip = WiFi.localIP();

@@ -42,6 +42,8 @@ void print();
  */
 uint16_t split(String s, char parser, int index);
 
+HTTPClient http;
+
 void setup() {
 
   //esp_log_level_set("*", ESP_LOG_DEBUG);
@@ -96,7 +98,9 @@ void setup() {
   display.setRotation(0);
   display.setTextColor(GxEPD_BLACK);
 
-  lastPegelUpdate = millis() + 10000; //Erstes Lesen der Daten nach 20s (s.u.)
+  lastPegelUpdate = millis(); //Erstes Lesen der Daten nach 20s (s.u.)
+
+  http.setReuse(true);
 
   screen.init();       
 
@@ -138,7 +142,7 @@ void loop() {
     
     //Nun Pegel und Wassertemp. holen
     if(now - lastPegelUpdate > 30000 && myWifi.connected()) {
-        if(readPegelData) {  
+        if(readPegelData && myWifi.timeUpdate) {  
           yield();
           readPegel(); 
         }
@@ -179,9 +183,8 @@ void readPegel() {
 
    if(myWifi.connected()) {
 
-       HTTPClient http;
        http.begin(F("http://192.168.178.24/data"));
-       vTaskDelay(10); 
+       yield();
     
        int httpCode = http.GET(); //http.POST(""); crashed staendig
        vTaskDelay(8);
@@ -192,7 +195,7 @@ void readPegel() {
             DynamicJsonDocument doc(256);
             deserializeJson(doc, payload); //TODO from website???
     
-            vTaskDelay(10); 
+            yield();
             if(debug) {
               Serial.println(F("SerializeJsonPretty to Serial"));
               serializeJsonPretty(doc, Serial);
@@ -215,7 +218,7 @@ void readPegel() {
           Serial.println(http.errorToString(httpCode));
         }    
         http.end();
-        vTaskDelay(10);
+        yield();
    } else {
         Serial.println(F("readPegel nicht moeglich, weil myWifi nicht verbunden"));
    }
