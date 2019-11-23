@@ -34,7 +34,7 @@ void MyWifi::connect() {
   _localIP = ip;
   _ip=ip.toString();
   
-  Serial.print(F("Ip Address: "));
+  Serial.print(F("\nIp Address: "));
   Serial.println(ip);
 
   Serial.println(F("Initializing sma.init"));
@@ -73,11 +73,12 @@ bool MyWifi::connected() {
 }
 
 void MyWifi::readTime() {
+    
     readPegelData = false;
     yield();
     //nicht EWIG warten (10 Versuche)
     int ct = 0;
-    Serial.println(F("Ongoing readTime()..."));
+    Serial.println(F("Reading time start"));
     if(!timeUpdate) {
       while(!(timeUpdate = timeClient.update())) {
         yield();
@@ -85,17 +86,21 @@ void MyWifi::readTime() {
         if(ct++>10) { 
           break;
         }
-        timeClient.forceUpdate();
+        timeClient.forceUpdate();        
       }    
       if(!timeUpdate) {
         Serial.println(F("Fehler beim Lesen der Zeit mit NTPClient!"));
         readPegelData = true;
+        delay(1000);
+        yield;
         return;
       }
-      runningSince = timeClient.getFormattedDate();
+      runningSince = timeClient.getFormattedTime();
       readPegelData = true; // Erst JETZT mit HTTPClient Pegel lesen, sonst Crash!
       ntpInitialized = true; //im connect()-Fall nur beim Start ausfuehren
       timeClient.setTimeOffset(3600); //UTC Korrektur 
     }
-    Serial.println(timeClient.getFormattedDate());
+    Serial.println(runningSince);
+    delay(1000);
+    yield();
 }

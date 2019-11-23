@@ -11,6 +11,7 @@ AsyncUDP udp;
 
 NTPClient timeClient(ntpUdp);
 OTA updater;
+Weather wetter;
 
 //GxIO_Class io(SPI, /*CS=5*/ 15, /*DC=*/ 17, /*RST=*/ 16); // arbitrary selection of 17, 16
 //GxEPD_Class display(io, /*RST=*/ 16, /*BUSY=*/ 4); // arbitrary selection of (16), 4
@@ -43,6 +44,7 @@ unsigned long lastPegelUpdate=0;
 unsigned long lastScreenUpdate=0;
 unsigned long lastReceivedPegelMillis = -1;
 unsigned long lastConnectCheck = 0;
+unsigned long lastWeatherMillis = -1;
 
 int pegel=0;
 int temperature=0;
@@ -61,3 +63,10 @@ String t2_new[]={ String((char*)0), String((char*)0) };
 
 float offsetTemp = 0.0;
 String runningSince = String((char*)0);
+
+float temp;
+float tempOld;
+int pressure;
+int humidity;
+float tempMin;
+float tempMax;

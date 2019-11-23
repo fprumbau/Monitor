@@ -14,6 +14,7 @@ class Screen {
     void drawContent();
     bool redraw = false;
     bool drawRects = false;
+    long notifyMillis=-1; 
   public:
     void redrawScreen(bool rects);
     bool debugDisplay = false;  

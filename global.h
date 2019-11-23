@@ -38,6 +38,7 @@
 #include "OTA.h"
 #include "SMA.h"
 #include "display.h"
+#include "Weather.h"
 
 extern bool debug;
 extern bool readPegelData;
@@ -51,6 +52,7 @@ extern Screen screen;
 
 extern AsyncWebServer server;   
 extern OTA updater; //Over-the-air updater
+extern Weather wetter;
 
 extern const int smaMeasurementsBeforSwitchoff;
 extern SMA sma;  //read SMA energy meter broadcast messages 
@@ -73,6 +75,7 @@ extern unsigned long lastPegelUpdate;
 extern unsigned long lastScreenUpdate;
 extern unsigned long lastReceivedPegelMillis;
 extern unsigned long lastConnectCheck;
+extern unsigned long lastWeatherMillis;
 
 extern unsigned int udpResets;
 extern String timeStamp;
@@ -85,4 +88,11 @@ extern String t2_new[2];
 
 extern float offsetTemp;
 extern String runningSince;
+
+extern float temp;
+extern float tempOld;
+extern int pressure;
+extern int humidity;
+extern float tempMin;
+extern float tempMax;
 #endif

@@ -44,6 +44,11 @@ void Screen::drawContent() {
       Serial.println(F("."));
   }
 
+  if(notifyMillis>0 && millis() - notifyMillis > 60000) { //Benachrichtigung nach 5 Minuten ueberschreiben
+    redraw = true;
+    notifyMillis = -1;
+  }
+
   if(pegel>0 && pegel!=pegelOld || redraw) {
 
     if(debugDisplay) {
@@ -71,6 +76,54 @@ void Screen::drawContent() {
     } while (display.nextPage());    
   }
 
+  if(temp>0 && temp != tempOld || redraw) {
+
+    if(debugDisplay) {
+      Serial.println(F("Drawing new temp box"));
+    }
+
+    tempOld = temp;
+
+    x = 0;
+    y = 185;
+    w = 185;
+    h = 80;
+
+    display.setPartialWindow(x, y, w, h);         
+    display.firstPage();
+    do {
+      display.fillScreen(GxEPD_WHITE);
+      if(drawRects) display.drawRect(x, y, w, h, GxEPD_BLACK);
+      display.setFont(&FreeSans9pt7b);
+        
+      display.setCursor(2, 200);
+      String t = F("Temperatur: ");
+      t += temp;
+      t += "'C";
+      display.print(t); 
+
+      display.setCursor(4, 220);
+      t = tempMin;
+      t += "'C bis ";
+      t += tempMax;
+      t += "'C";
+      display.print(t); 
+      
+      display.setCursor(4, 240);
+      t = F("Luftfeuchte: ");
+      t += humidity;
+      t += "%";
+      display.print(t);       
+
+      display.setCursor(4, 260);
+      t = F("Luftdruck: ");
+      t += pressure;
+      t += " hPa";
+      display.print(t);     
+    } while (display.nextPage());  
+    
+  }
+
   if(temperature>0 && temperature != temperatureOld || redraw) {
     
     if(debugDisplay) {
@@ -90,7 +143,7 @@ void Screen::drawContent() {
       display.fillScreen(GxEPD_WHITE);
       if(drawRects) display.drawRect(x, y, w, h, GxEPD_BLACK);
       display.setFont(&Lato_Bold_80);      
-      display.setCursor(-4, 162);
+      display.setCursor(0, 162);
       display.print(temperature);   
       display.setFont(&FreeSansBold24pt7b);
       display.print(F("'C"));
@@ -103,7 +156,7 @@ void Screen::drawContent() {
       x = 0;
       y = 165;
       w = 185;
-      h = 100;
+      h = 20;
 
       timeStampOld = timeStamp;
 
@@ -115,14 +168,11 @@ void Screen::drawContent() {
       display.firstPage();
       do {
         display.fillScreen(GxEPD_WHITE);
-        if(drawRects) display.drawRect(0,165,185,100, GxEPD_BLACK);
+        if(drawRects) display.drawRect(x, y, w, h, GxEPD_BLACK);
         display.setFont(&FreeSans9pt7b);  
         display.setCursor(2, 180);
-        String date = timeClient.getFormattedDate();
-        date = date.substring(0,10);
-        display.print(date); 
-        display.setCursor(2, 200);
-        display.print(timeClient.getFormattedTime()); 
+        display.print(timeStamp); 
+        display.print(F(" Untereschb.")); 
       } while (display.nextPage());  
       
   }
@@ -304,6 +354,7 @@ void Screen::notify(String msg) {
     if(debugDisplay) {
       Serial.println(F("Drawing notification message"));
     }
+    notifyMillis = millis(); 
     
     display.setPartialWindow(x, y, w, h);
     display.firstPage();

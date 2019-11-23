@@ -5,7 +5,7 @@
 void OTA::init(const char* host) {
   //OTA is possible only with 4mb memory
   long flashSize = ESP.getFlashChipSize();
-  Serial.println(F("Flash Size: "));
+  Serial.print(F("\nFlash Size: "));
   Serial.println(flashSize);
   if(flashSize > 4000000) {
      //set web UI

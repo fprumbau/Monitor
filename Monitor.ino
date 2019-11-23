@@ -42,8 +42,6 @@ void print();
  */
 uint16_t split(String s, char parser, int index);
 
-HTTPClient http;
-
 void setup() {
 
   //esp_log_level_set("*", ESP_LOG_DEBUG);
@@ -77,7 +75,9 @@ void setup() {
   display.init(115200);
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(200, "text/html", F("Pegeldisplay, rufe /update zur Aktualisierung oder /restart zum Neustart!"));
+    String msg = F("Pegeldisplay, rufe <b><a href='/update'>/update</a></b> zur Aktualisierung oder <a href='/restart'><b>/restart</b></a> zum Neustart! <p><b>Aktuelle Version:</b> ");
+    msg += VERSION;
+    request->send(200, "text/html", msg);
   });
 
   server.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -98,9 +98,9 @@ void setup() {
   display.setRotation(0);
   display.setTextColor(GxEPD_BLACK);
 
-  lastPegelUpdate = millis(); //Erstes Lesen der Daten nach 20s (s.u.)
+  lastPegelUpdate = millis() - 55000; //Erstes Lesen der Daten nach 5s (wg. 60s Intervall)
 
-  http.setReuse(true);
+  //http.setReuse(true);
 
   screen.init();       
 
@@ -141,7 +141,7 @@ void loop() {
 
     
     //Nun Pegel und Wassertemp. holen
-    if(now - lastPegelUpdate > 30000 && myWifi.connected()) {
+    if(now - lastPegelUpdate > 60000 && myWifi.connected()) {
         if(readPegelData && myWifi.timeUpdate) {  
           yield();
           readPegel(); 
@@ -149,9 +149,16 @@ void loop() {
         lastPegelUpdate = now;       
         if(!myWifi.timeUpdate) {
           Serial.println(F("NTP noch nicht initialisiert, starte myWifi.readTime()"));
-          myWifi.readTime();   
+          //myWifi.readTime();   
         }
     }
+
+    //Nun Wetter
+    if(now - lastWeatherMillis > 3600000 || lastWeatherMillis == -1) { //Einmal pro Stunde Wetterupdate
+        wetter.update();
+    }
+
+    
     //Ist das letzte Pegelupdate mehr als 10Min her, versuche eine
     //Re-Initialisierung des HTTPClients über einen forcierten NtpClient-Aufruf
     //analog 'read time reset'
@@ -182,43 +189,51 @@ void loop() {
 void readPegel() {
 
    if(myWifi.connected()) {
+         Serial.println(F("Reading pegel start..."));
 
-       http.begin(F("http://192.168.178.24/data"));
-       yield();
-    
-       int httpCode = http.GET(); //http.POST(""); crashed staendig
-       vTaskDelay(8);
-       if (httpCode > 0) { //Check for the returning code
-        
-            String payload = http.getString();
-
-            DynamicJsonDocument doc(256);
-            deserializeJson(doc, payload); //TODO from website???
-    
-            yield();
-            if(debug) {
-              Serial.println(F("SerializeJsonPretty to Serial"));
-              serializeJsonPretty(doc, Serial);
-            }
-            
-            pegel = doc["p"];
-            temperature = doc["t"];
-
-            if(debug) {
-              Serial.print(F("Pegel: "));
-              Serial.println(pegel);
-            }
-            timeStamp = timeClient.getFormattedDate();
-
-            lastReceivedPegelMillis = now; //Diese Messung ist 'später' als die Vergleichsmessung in loop()
-                
-        } else {
+         {
+         HTTPClient http;
+         http.begin(F("http://192.168.178.24/data"));
+         yield();
+      
+         int httpCode = http.GET(); //http.POST(""); crashed staendig
+         vTaskDelay(8);
+         if (httpCode > 0) { //Check for the returning code
           
-          Serial.print(F("Error sending POST: "));
-          Serial.println(http.errorToString(httpCode));
-        }    
-        http.end();
-        yield();
+              String payload = http.getString();
+  
+              DynamicJsonDocument doc(256);
+              deserializeJson(doc, payload); //TODO from website???
+      
+              yield();
+              if(debug) {
+                Serial.println(F("SerializeJsonPretty to Serial"));
+                serializeJsonPretty(doc, Serial);
+              }
+              
+              pegel = doc["p"];
+              temperature = doc["t"];
+  
+              if(debug) {
+                Serial.print(F("Pegel: "));
+                Serial.println(pegel);
+              }
+              timeStamp = timeClient.getFormattedTime();
+  
+              lastReceivedPegelMillis = now; //Diese Messung ist 'später' als die Vergleichsmessung in loop()
+                  
+          } else {
+            
+            Serial.print(F("Error sending POST: "));
+            Serial.println(http.errorToString(httpCode));
+            String err = F("Err ");
+            err+=timeClient.getFormattedTime();
+            screen.notify(err);
+            
+          }    
+          http.end();
+          yield();
+        }
    } else {
         Serial.println(F("readPegel nicht moeglich, weil myWifi nicht verbunden"));
    }
@@ -247,7 +262,11 @@ void commandLine() {
         sma.debugSma=true;
       } else if(cmd.startsWith(F("debug sma off"))) {      
         sma.debugSma=false;
-      } else if(cmd.startsWith(F("debug display on"))) {      
+      } else if(cmd.startsWith(F("debug weather on"))) {      
+        wetter.debugWeather=true;
+      } else if(cmd.startsWith(F("debug weather off"))) {      
+        wetter.debugWeather=false;
+      }else if(cmd.startsWith(F("debug display on"))) {      
         screen.debugDisplay=true;
       } else if(cmd.startsWith(F("debug display off"))) {      
         screen.debugDisplay=false;
@@ -261,6 +280,8 @@ void commandLine() {
         readPegelData=false;
       } else if(cmd.startsWith(F("read pegel"))) {      
         readPegel();
+      } else if(cmd.startsWith(F("read weather"))) {      
+        wetter.update();
       } else if(cmd.startsWith(F("read time"))) {    
         if(cmd.startsWith(F("read time reset"))) {
             myWifi.timeUpdate = false;
@@ -306,6 +327,7 @@ void commandLine() {
         Serial.println(F("Available commands:"));
         Serial.println(F(" - debug on|off"));
         Serial.println(F(" - read pegel :: httpclient read pegel data"));
+        Serial.println(F(" - read weather :: httpclient read weather data"));
         Serial.println(F(" - set pegel|temp VAL :: setzen von Testwerten fuer Temperatur und Pegel"));
         Serial.println(F(" - reconnect sma :: reinit udp"));
         Serial.println(F(" - restart wifi :: reinit wifi conn"));
@@ -313,6 +335,7 @@ void commandLine() {
         Serial.println(F(" - read pegel on|off :: Pegel lesen"));
         Serial.println(F(" - draw rects on|off :: Felder nicht mehr optisch begrenzen"));
         Serial.println(F(" - debug sma on|off :: SMA-UdP-Debug on/off"));
+        Serial.println(F(" - debug weather on|off :: Weather-Debug on/off"));
         Serial.println(F(" - debug temp on|off :: TemperaturSensor-Debug on/off"));
         Serial.println(F(" - debug display on|off :: Debugausgaben fuers Display on/off"));
         Serial.println(F(" - rect x,y,w,h, :: zeichne ein Rechteck"));
@@ -350,11 +373,21 @@ void print() {
   Serial.print(F("Timeupdate :: "));  
   Serial.println(myWifi.timeUpdate);  
   Serial.print(F("Zeit :: "));  
-  Serial.println(timeClient.getFormattedDate());
+  Serial.println(timeClient.getFormattedTime());
   Serial.print(F("Timestamp :: "));  
   Serial.println(timeStamp);  
   Serial.print(F("Timestamp old :: "));  
   Serial.println(timeStampOld);
+  Serial.print(F("Wettertemp :: "));  
+  Serial.println(temp); 
+  Serial.print(F("Wetterdruck :: "));  
+  Serial.println(pressure); 
+  Serial.print(F("Wetterfeuchte :: "));  
+  Serial.println(humidity); 
+  Serial.print(F("WettertempMin :: "));  
+  Serial.println(tempMin); 
+  Serial.print(F("WettertempMax :: "));  
+  Serial.println(tempMax);   
 }
 
 uint16_t split(String s, char parser, int index) {

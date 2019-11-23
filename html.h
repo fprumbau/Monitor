@@ -14,7 +14,7 @@ const char changelog[] PROGMEM = R"=====(
 <li>0.12: now wird nun als nicht-lokale Variable gehalten und nur einmal pro loop()-Durchlauf gelesen
 <li>0.12: weitere Optimierungen hinsichtlich Speicherverbrauch, NTP nicht bei jedem Loop (60s)
 <li>0.13: Wurde NTP nicht initialisiert, dann wird dies nun sp&auml;ter nachgeholt; einige yields hinzugef&uuml;gt
-<li>0.14: esp_task_wdt_init(999,false) in setup eingebaut, einige Timeouts geändert (nach 20s erstmals HTTP, Temp alle 1.5s, vorher 1.0s)
+<li>0.14: esp_task_wdt_init(999,false) in setup eingebaut, einige Timeouts ge&auml;ndert (nach 20s erstmals HTTP, Temp alle 1.5s, vorher 1.0s)
 <li>0.15: Ausgabe der Versionsnummer beim Update
 <li>0.16: Timeout von 999 auf 5000 erh&ouml;ht, statt yield nun vtaskdelay(10) in readPegel 
 <li>0.17: Allgemeines ESP-Debuglogging abgeschaltet, 'enable esp debug'-Option f&uuml;r Kommandozeile 
@@ -23,10 +23,21 @@ const char changelog[] PROGMEM = R"=====(
 <li>0.20: Einige vTaskDelay(10); in OTA.cpp hinzu, direkte Verdrahtung von 192.168.178.24/data
 <li>0.21: HttpClient lokal zu readPegel, kein reuse, mit end(), Zugriff wieder mit GET, POST crashed staendig
 <li>0.22: Wieder yield statt vTaskDelay, Http wieder extern mit reuse=true defininiert, 3s statt 1s Reconnect Timeout bie MyWifi
-<li>0.23: Wieder 30s Wartezeit, bevor readPegel zum ersten Mal läuft und Test auf myWifi.timeUpdate, um Überschneidungen mit dem NTPClient zu vermeiden
+<li>0.23: Wieder 30s Wartezeit, bevor readPegel zum ersten Mal l&auml;uft und Test auf myWifi.timeUpdate, um Überschneidungen mit dem NTPClient zu vermeiden
+<li>0.24: Test ohne http.end(), wo er immer crashed.
+<li>0.25: HttpClient-Abschnitt in eigenem Block, readTime() mit Delay
+<li>0.26: NTPClient aktualisiert, damit Crashes aufh&ouml;ren
+<li>0.27: NTPClient um fehlende Funktionen erg&auml;nzt (crashes wieder da)
+<li>0.28: Nur noch Zeit angezeigt
+<li>0.28: Versionsnummer im Browser
+<li>0.28: Debug GxEPD aus
+<li>0.28: 60s statt 30s Pegelintervall, aber schon nach 5s erster Versuch
+<li>0.28: Anzeige im Display, wenn Lesefehler Fehlerausgabe mit Zeit auf Display
+<li>0.29: Benachrichtigungen (z.B. von HTTP-Fehlern) sollten nach 1 Minute wieder &uuml;berschrieben werden
+<li>0.29: Erste Integration der Openweathermap.
 )=====";
 
-#define VERSION 0.23
+#define VERSION 0.29
 
 const char update[] PROGMEM = R"=====(
 <!DOCTYPE html><html lang="en" style="height:100%;"><head>
@@ -61,6 +72,50 @@ if(redirect) {
 </div> </body></html>
 )=====";
 
+const char weatherdata[] PROGMEM = R"=====(
+{ 
+   "coord":{ 
+      "lon":6.95,
+      "lat":50.93
+   },
+   "weather":[ 
+      { 
+         "id":804,
+         "main":"Clouds",
+         "description":"overcast clouds",
+         "icon":"04d"
+      }
+   ],
+   "base":"stations",
+   "main":{ 
+      "temp":6.74,
+      "pressure":999,
+      "humidity":70,
+      "temp_min":4.44,
+      "temp_max":8.89
+   },
+   "visibility":10000,
+   "wind":{ 
+      "speed":2.6,
+      "deg":110
+   },
+   "clouds":{ 
+      "all":100
+   },
+   "dt":1574502410,
+   "sys":{ 
+      "type":1,
+      "id":1271,
+      "country":"DE",
+      "sunrise":1574492441,
+      "sunset":1574523399
+   },
+   "timezone":3600,
+   "id":2886242,
+   "name":"Koeln",
+   "cod":200
+}
+)=====";
 /**
  * You can disable diagnostic output in the .cpp file of each display class if needed by un-commenting:
 
