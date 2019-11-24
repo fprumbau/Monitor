@@ -75,7 +75,7 @@ void setup() {
   display.init(115200);
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    String msg = F("Pegeldisplay, rufe <b><a href='/update'>/update</a></b> zur Aktualisierung oder <a href='/restart'><b>/restart</b></a> zum Neustart! <p><b>Aktuelle Version:</b> ");
+    String msg = F("Pegeldisplay, rufe <b><a href='/update'>/update</a></b> zur Aktualisierung, <a href='/restart'><b>/restart</b></a> zum Neustart, und <a href='/wifi'><b>/wifi</b></a> zum Empfangsst&auml;rkenanzeige! <p><b>Aktuelle Version:</b> ");
     msg += VERSION;
     request->send(200, "text/html", msg);
   });
@@ -84,6 +84,13 @@ void setup() {
     request->send(200, "text/html", F("Restarte ESP in 3s..."));
     delay(3000);
     ESP.restart();
+  });
+
+ server.on("/wifi", HTTP_GET, [](AsyncWebServerRequest *request){
+    String msg = F("<html><head><meta http-equiv='refresh' content='1'></head><body>Empfangst&auml;rke: <b>");
+    msg+=myWifi.strength();
+    msg+=F("</b>dbm</body></html>");
+    request->send(200, "text/html", msg);
   });
 
   server.begin();
@@ -154,7 +161,7 @@ void loop() {
     }
 
     //Nun Wetter
-    if(now - lastWeatherMillis > 3600000 || lastWeatherMillis == -1) { //Einmal pro Stunde Wetterupdate
+    if(now - lastWeatherMillis > 660000 || lastWeatherMillis == -1) { //Einmal alle 11 Min (openweathermap aktualisiert alle 10 Min)
         wetter.update();
     }
 

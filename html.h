@@ -35,9 +35,11 @@ const char changelog[] PROGMEM = R"=====(
 <li>0.28: Anzeige im Display, wenn Lesefehler Fehlerausgabe mit Zeit auf Display
 <li>0.29: Benachrichtigungen (z.B. von HTTP-Fehlern) sollten nach 1 Minute wieder &uuml;berschrieben werden
 <li>0.29: Erste Integration der Openweathermap.
+<li>0.30: Openweathermap nun alle 11Min statt 60Min (Serveratualisierung erfolgt alle 11 Minuten
+<li>0.30: RSSI-Empfangsst&auml;rkenanzeige &uuml;ber /wifi
 )=====";
 
-#define VERSION 0.29
+#define VERSION 0.30
 
 const char update[] PROGMEM = R"=====(
 <!DOCTYPE html><html lang="en" style="height:100%;"><head>

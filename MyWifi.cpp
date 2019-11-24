@@ -104,3 +104,7 @@ void MyWifi::readTime() {
     delay(1000);
     yield();
 }
+
+long MyWifi::strength() {
+  return WiFi.RSSI();
+}

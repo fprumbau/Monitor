@@ -23,6 +23,7 @@ class MyWifi {
       void reconnect();
       bool connected();
       void readTime();
+      long strength();
 };
 
 #endif
