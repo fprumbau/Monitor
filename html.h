@@ -37,9 +37,10 @@ const char changelog[] PROGMEM = R"=====(
 <li>0.29: Erste Integration der Openweathermap.
 <li>0.30: Openweathermap nun alle 11Min statt 60Min (Serveratualisierung erfolgt alle 11 Minuten
 <li>0.30: RSSI-Empfangsst&auml;rkenanzeige &uuml;ber /wifi
+<li>0.31: 
 )=====";
 
-#define VERSION 0.30
+#define VERSION 0.31
 
 const char update[] PROGMEM = R"=====(
 <!DOCTYPE html><html lang="en" style="height:100%;"><head>
