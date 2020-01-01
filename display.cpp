@@ -44,6 +44,13 @@ void Screen::drawContent() {
       Serial.println(F("."));
   }
 
+  if(stop) {
+      if(debugDisplay) { 
+        Serial.println(F("stop"));
+      }
+      return;
+  }
+
   if(notifyMillis>0 && millis() - notifyMillis > 60000) { //Benachrichtigung nach 5 Minuten ueberschreiben
     redraw = true;
     notifyMillis = -1;
@@ -324,6 +331,12 @@ void Screen::drawContent() {
 }
 
 void Screen::showBox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool partial) {
+  if(stop) {
+      if(debugDisplay) { 
+        Serial.println(F("stop"));
+      }
+      return;
+  }
   display.setRotation(0);
   if (partial) {
     display.setPartialWindow(x, y, w, h);
@@ -340,12 +353,25 @@ void Screen::showBox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool partia
 }
 
 void Screen::redrawScreen(bool rects) {  
+  if(stop) {
+      if(debugDisplay) { 
+        Serial.println(F("stop"));
+      }
+      return;
+  }  
   drawRects = rects;
   init();
   redraw=true;
 }
 
 void Screen::notify(String msg) {
+    if(stop) {
+        if(debugDisplay) { 
+          Serial.println(F("stop"));
+        }
+        return;
+    }
+    
     x = 180;
     y = 0;
     w = 220;
@@ -365,4 +391,27 @@ void Screen::notify(String msg) {
       display.setCursor(x+3, y+18);
       display.print(msg);      
     } while (display.nextPage());         
+}
+
+void Screen::refresh() {
+  stop = true;
+  delay(2000);
+  for(int i=0; i<3; i++) {
+    display.setFullWindow();
+    display.firstPage();
+    do {
+      display.fillScreen(GxEPD_BLACK);
+    }
+    while (display.nextPage());
+    
+    delay(500);
+    
+    display.setFullWindow();
+    display.firstPage();
+    do {
+      display.fillScreen(GxEPD_WHITE);
+    }
+    while (display.nextPage());
+    stop = false;    
+  }
 }

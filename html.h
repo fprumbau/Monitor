@@ -35,12 +35,15 @@ const char changelog[] PROGMEM = R"=====(
 <li>0.28: Anzeige im Display, wenn Lesefehler Fehlerausgabe mit Zeit auf Display
 <li>0.29: Benachrichtigungen (z.B. von HTTP-Fehlern) sollten nach 1 Minute wieder &uuml;berschrieben werden
 <li>0.29: Erste Integration der Openweathermap.
-<li>0.30: Openweathermap nun alle 11Min statt 60Min (Serveratualisierung erfolgt alle 11 Minuten
+<li>0.30: Openweathermap nun alle 11Min statt 60Min (Serveraktualisierung erfolgt alle 11 Minuten
 <li>0.30: RSSI-Empfangsst&auml;rkenanzeige &uuml;ber /wifi
-<li>0.31: 
+<li>0.31  Mit neuen Sensoren kommt nun Temperaturanzeige ohne Verzögerung
+<li>0.31: Display-Refresh eingebaut
+<li>0.32: Offset von 60cm (Wintermodus) hinzugefuegt
+<li>0.33: Screen refresh nur noch 3 statt 10 Mal, dafür nach jedem Restart einmal 
 )=====";
 
-#define VERSION 0.31
+#define VERSION 0.33
 
 const char update[] PROGMEM = R"=====(
 <!DOCTYPE html><html lang="en" style="height:100%;"><head>

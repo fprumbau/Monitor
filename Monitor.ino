@@ -111,6 +111,8 @@ void setup() {
 
   screen.init();       
 
+  screen.refresh();
+
   screen.notify(String(VERSION));
 }
 
@@ -152,6 +154,20 @@ void loop() {
         if(readPegelData && myWifi.timeUpdate) {  
           yield();
           readPegel(); 
+          yield();
+          int hours = timeClient.getHours();
+          //zwischen 02:00 Uhr Morgens und 03:00 Morgens EINMAL Displayrefresh
+          if(hours>=2 && hours < 3) {
+              if(!screen.refreshed) {
+                Serial.println("Triggering screen.refresh():");
+                Serial.println(hours);
+                screen.refresh();
+                screen.refreshed = true;
+              }      
+          } else {
+            //ausserhalb der Refreshzeiten Flag zurückstellen   
+            screen.refreshed = false;
+          }
         }
         lastPegelUpdate = now;       
         if(!myWifi.timeUpdate) {
@@ -219,6 +235,9 @@ void readPegel() {
               }
               
               pegel = doc["p"];
+              //Offset im Winter
+              pegel += 60; //60cm herausgezogen
+              
               temperature = doc["t"];
   
               if(debug) {
@@ -281,6 +300,8 @@ void commandLine() {
         debugTemperature=true;
       } else if(cmd.startsWith(F("debug temp off"))) {      
         debugTemperature=false;
+      }  else if(cmd.startsWith(F("screen refresh"))) {      
+        screen.refresh();
       } else if(cmd.startsWith(F("read pegel on"))) {      
         readPegelData=true;
       } else if(cmd.startsWith(F("read pegel off"))) {      
@@ -346,6 +367,7 @@ void commandLine() {
         Serial.println(F(" - debug temp on|off :: TemperaturSensor-Debug on/off"));
         Serial.println(F(" - debug display on|off :: Debugausgaben fuers Display on/off"));
         Serial.println(F(" - rect x,y,w,h, :: zeichne ein Rechteck"));
+        Serial.println(F(" - screen refresh :: 10x Wechsel von Schwarz auf Weiss OHNE PartialUpdate"));
         Serial.println(F(" - set offsetTemp TEMP :: zur Angleichung der Temperatursensoren"));        
         Serial.println(F(" - enable esp debug :: esp idf logging aktivieren"));       
         Serial.println(F(" - print :: Schreibe einige abgeleitete Werte auf den Bildschirm"));
@@ -424,6 +446,9 @@ void readTemperatures() {
             Temperatur[i] = myDS18B20.getTempCByIndex(i);
             if (Temperatur[i] == DEVICE_DISCONNECTED_C) {
                 Temperatur[i] = No_Val;
+                TempLast[i] = -1;
+                t1_new[i]="-";
+                t2_new[i]="";   
                 if(debug) Serial.println(F("Fehler"));
             } else {
 
@@ -434,7 +459,8 @@ void readTemperatures() {
                 if(TempLast[i] == 0) {
                   TempLast[i] = Temperatur[i];
                 } else {
-                  TempLast[i] = TempLast[i]  - 0.035 * (TempLast[i] -Temperatur[i]);
+                  TempLast[i] = Temperatur[i];
+                  //TempLast[i] = TempLast[i]  - 0.035 * (TempLast[i] -Temperatur[i]);
                 }
 
                 String t = String(TempLast[i]);                
