@@ -41,9 +41,10 @@ const char changelog[] PROGMEM = R"=====(
 <li>0.31: Display-Refresh eingebaut
 <li>0.32: Offset von 60cm (Wintermodus) hinzugefuegt
 <li>0.33: Screen refresh nur noch 3 statt 10 Mal, dafür nach jedem Restart einmal 
+<li>0.34: In der Config lässt sich nun der Offset abspeichern und über z.B. http://monitor1?offset=30 neu gesetzt werden
 )=====";
 
-#define VERSION 0.33
+#define VERSION 0.34
 
 const char update[] PROGMEM = R"=====(
 <!DOCTYPE html><html lang="en" style="height:100%;"><head>

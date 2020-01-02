@@ -13,6 +13,8 @@ NTPClient timeClient(ntpUdp);
 OTA updater;
 Weather wetter;
 
+CFG config;
+
 //GxIO_Class io(SPI, /*CS=5*/ 15, /*DC=*/ 17, /*RST=*/ 16); // arbitrary selection of 17, 16
 //GxEPD_Class display(io, /*RST=*/ 16, /*BUSY=*/ 4); // arbitrary selection of (16), 4
 
@@ -38,6 +40,8 @@ SMA sma;
 float bezug=0.0;
 float lieferung=0.0;
 float netto=0.0;
+
+int offset=60; //Winterstellung
 
 unsigned long lastTempUpd=0;
 unsigned long lastPegelUpdate=0;

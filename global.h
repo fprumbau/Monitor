@@ -40,6 +40,11 @@
 #include "display.h"
 #include "Weather.h"
 
+#include <SPIFFS.h>
+#include <FS.h>
+#include "CFG.h"
+extern int offset;
+
 extern bool debug;
 extern bool readPegelData;
 
@@ -49,6 +54,7 @@ extern NTPClient timeClient;
 extern GxEPD2_BW<GxEPD2_420, GxEPD2_420::HEIGHT> display;
 
 extern Screen screen;
+extern CFG config;
 
 extern AsyncWebServer server;   
 extern OTA updater; //Over-the-air updater

@@ -75,8 +75,28 @@ void setup() {
   display.init(115200);
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    String msg = F("Pegeldisplay, rufe <b><a href='/update'>/update</a></b> zur Aktualisierung, <a href='/restart'><b>/restart</b></a> zum Neustart, und <a href='/wifi'><b>/wifi</b></a> zum Empfangsst&auml;rkenanzeige! <p><b>Aktuelle Version:</b> ");
+    String msg = F("Pegeldisplay, rufe <b><a href='/update'>/update</a></b> zur Aktualisierung, <a href='/restart'><b>/restart</b></a> zum Neustart, <b>/?offset=nn</b> (cm) zur Einstellung des Offsets und <a href='/wifi'><b>/wifi</b></a> zur Empfangsst&auml;rkenanzeige! <p><b>Aktuelle Version:</b> ");
     msg += VERSION;
+
+    //neuer offset angegeben?
+    int paramsNr = request->params();
+    //Serial.println(paramsNr);
+ 
+    for(int i=0;i<paramsNr;i++){
+ 
+        AsyncWebParameter* p = request->getParam(i);
+
+       String pName = p->name();
+       if(pName.equals("offset")) {
+          String pVal = p->value();
+          offset = pVal.toInt();
+          Serial.print("Offset: ");
+          Serial.println(offset);
+          config.save();
+          break;
+       }
+    }
+    
     request->send(200, "text/html", msg);
   });
 
@@ -108,6 +128,7 @@ void setup() {
   lastPegelUpdate = millis() - 55000; //Erstes Lesen der Daten nach 5s (wg. 60s Intervall)
 
   //http.setReuse(true);
+  config.load();
 
   screen.init();       
 
@@ -236,7 +257,7 @@ void readPegel() {
               
               pegel = doc["p"];
               //Offset im Winter
-              pegel += 60; //60cm herausgezogen
+              pegel += offset; //60cm herausgezogen
               
               temperature = doc["t"];
   
@@ -336,6 +357,12 @@ void commandLine() {
         ost.trim();
         offsetTemp = ost.toFloat();     
         Serial.println(offsetTemp);
+      } else if(cmd.startsWith(F("set offset"))) {        
+        String ost = cmd.substring(11);
+        ost.trim();
+        offset = ost.toInt();     
+        config.save();
+        Serial.println(offset);
       } else if(cmd.startsWith(F("rect"))) {      
         String val = cmd.substring(5);
         Serial.println(val);        
@@ -369,6 +396,7 @@ void commandLine() {
         Serial.println(F(" - rect x,y,w,h, :: zeichne ein Rechteck"));
         Serial.println(F(" - screen refresh :: 10x Wechsel von Schwarz auf Weiss OHNE PartialUpdate"));
         Serial.println(F(" - set offsetTemp TEMP :: zur Angleichung der Temperatursensoren"));        
+        Serial.println(F(" - set offset CM :: zur Angleichung des Pegels ( 0 == Sensor ganz unten )"));
         Serial.println(F(" - enable esp debug :: esp idf logging aktivieren"));       
         Serial.println(F(" - print :: Schreibe einige abgeleitete Werte auf den Bildschirm"));
         return;
@@ -417,6 +445,8 @@ void print() {
   Serial.println(tempMin); 
   Serial.print(F("WettertempMax :: "));  
   Serial.println(tempMax);   
+  Serial.print(F("Offset :: "));  
+  Serial.println(offset);     
 }
 
 uint16_t split(String s, char parser, int index) {
